@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO Dashboard - Modern UI Demo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#09090b;--card:#18181b;--card-hover:#1f1f23;--border:#27272a;--primary:#3b82f6;--primary-muted:rgba(59,130,246,.1);--success:#22c55e;--warning:#eab308;--danger:#ef4444;--text:#fafafa;--text-secondary:#a1a1aa;--text-muted:#71717a;--ring:rgba(59,130,246,.5)}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+/* Sidebar */
+.sidebar{background:var(--bg);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.logo{padding:20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--primary),#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff}
+.logo span{font-size:16px;font-weight:700;letter-spacing:-.3px}
+.logo small{font-size:10px;color:var(--text-muted);display:block;margin-top:1px}
+.nav{padding:12px 8px;flex:1}
+.nav-group{margin-bottom:20px}
+.nav-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);padding:4px 12px;margin-bottom:4px;font-weight:500}
+.nav-link{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all .1s}
+.nav-link:hover{color:var(--text);background:var(--card)}
+.nav-link.active{color:var(--text);background:var(--primary-muted)}
+.nav-link.active::before{content:'';width:3px;height:16px;background:var(--primary);border-radius:2px;margin-left:-4px;margin-right:6px}
+.nav-link svg{width:16px;height:16px;opacity:.6}
+
+/* Main */
+.main{padding:24px 32px;overflow-y:auto;max-height:100vh}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.page-title{font-size:22px;font-weight:700;letter-spacing:-.3px}
+.page-subtitle{font-size:13px;color:var(--text-muted);margin-top:2px}
+.header-actions{display:flex;gap:8px}
+.btn{padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+.btn-ghost{background:transparent;color:var(--text-secondary);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--text-muted)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{opacity:.9}
+
+/* Metrics */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px}
+.metric-label{font-size:12px;color:var(--text-muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.metric-value{font-size:24px;font-weight:700;letter-spacing:-.5px}
+.metric-change{font-size:11px;margin-top:4px;display:flex;align-items:center;gap:4px}
+.metric-change.up{color:var(--success)}
+.metric-change.down{color:var(--danger)}
+
+/* Content Score */
+.content-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:24px}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:8px}
+.panel-header{padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.panel-title{font-size:14px;font-weight:600}
+.panel-body{padding:16px}
+
+/* Score Circle */
+.score-section{display:flex;align-items:center;gap:24px;padding:20px}
+.score-ring{position:relative;width:120px;height:120px}
+.score-ring svg{width:120px;height:120px;transform:rotate(-90deg)}
+.score-ring circle{fill:none;stroke-width:8;stroke-linecap:round}
+.score-ring .bg{stroke:var(--border)}
+.score-ring .fill{stroke:var(--success);stroke-dasharray:339.292;stroke-dashoffset:54;transition:stroke-dashoffset .5s}
+.score-number{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-number strong{font-size:28px;font-weight:700;line-height:1}
+.score-number span{font-size:11px;color:var(--text-muted)}
+.score-details{flex:1}
+.score-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.score-item:last-child{border:none}
+.score-item-label{font-size:13px;color:var(--text-secondary)}
+.score-item-bar{width:100px;height:4px;background:var(--border);border-radius:2px;margin:0 12px}
+.score-item-bar span{display:block;height:100%;border-radius:2px}
+.score-item-value{font-size:13px;font-weight:600;min-width:30px;text-align:right}
+
+/* Keywords */
+.keyword-list{list-style:none}
+.keyword-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.keyword-item:last-child{border:none}
+.keyword-rank{font-size:12px;color:var(--text-muted);min-width:24px}
+.keyword-text{flex:1;font-size:13px}
+.keyword-count{font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+.keyword-bar{width:60px;height:4px;background:var(--border);border-radius:2px}
+.keyword-bar span{display:block;height:100%;border-radius:2px;background:var(--primary)}
+.keyword-status{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500}
+.keyword-status.good{background:rgba(34,197,94,.1);color:var(--success)}
+.keyword-status.warn{background:rgba(234,179,8,.1);color:var(--warning)}
+.keyword-status.low{background:rgba(239,68,68,.1);color:var(--danger)}
+
+/* Table */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 16px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:500;border-bottom:1px solid var(--border)}
+td{padding:10px 16px;font-size:13px;border-bottom:1px solid var(--border)}
+tr:last-child td{border:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.url-cell{color:var(--primary);font-size:12px;font-family:'JetBrains Mono',monospace}
+.trend{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:500}
+.trend.up{color:var(--success)}
+.trend.down{color:var(--danger)}
+.trend.flat{color:var(--text-muted)}
+
+/* Tag */
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;background:var(--primary-muted);color:var(--primary)}
+
+@media(max-width:1200px){.content-grid{grid-template-columns:1fr}}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{display:none}.metrics{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">S</div>
+      <div><span>SEOLyze</span><small>Content Optimizer</small></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="nav-label">Analyze</div>
+        <div class="nav-link active">Dashboard</div>
+        <div class="nav-link">Content Editor</div>
+        <div class="nav-link">Keyword Research</div>
+        <div class="nav-link">SERP Analysis</div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Monitor</div>
+        <div class="nav-link">Rankings</div>
+        <div class="nav-link">Competitors</div>
+        <div class="nav-link">Backlinks</div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Reports</div>
+        <div class="nav-link">Site Audit</div>
+        <div class="nav-link">Performance</div>
+        <div class="nav-link">Exports</div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Account</div>
+        <div class="nav-link">Settings</div>
+        <div class="nav-link">API Keys</div>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Content Dashboard</div>
+        <div class="page-subtitle">Analyzing: uniteddigiart.com • Last scan: 2 hours ago</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost">Export</button>
+        <button class="btn btn-ghost">Settings</button>
+        <button class="btn btn-primary">+ New Analysis</button>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Content Score</div>
+        <div class="metric-value">84<span style="font-size:14px;color:var(--text-muted)">/100</span></div>
+        <div class="metric-change up">↑ 7 pts this week</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Tracked Keywords</div>
+        <div class="metric-value">342</div>
+        <div class="metric-change up">↑ 12 new</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Avg. Position</div>
+        <div class="metric-value">14.2</div>
+        <div class="metric-change up">↑ 2.3 improved</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Indexed Pages</div>
+        <div class="metric-value">1,847</div>
+        <div class="metric-change down">↓ 3 dropped</div>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Content Optimization Score</span>
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px">Details</button>
+        </div>
+        <div class="score-section">
+          <div class="score-ring">
+            <svg viewBox="0 0 120 120">
+              <circle class="bg" cx="60" cy="60" r="54"/>
+              <circle class="fill" cx="60" cy="60" r="54"/>
+            </svg>
+            <div class="score-number">
+              <strong>84</strong>
+              <span>Overall</span>
+            </div>
+          </div>
+          <div class="score-details">
+            <div class="score-item">
+              <span class="score-item-label">Keyword Density</span>
+              <div class="score-item-bar"><span style="width:92%;background:var(--success)"></span></div>
+              <span class="score-item-value">92</span>
+            </div>
+            <div class="score-item">
+              <span class="score-item-label">Readability</span>
+              <div class="score-item-bar"><span style="width:87%;background:var(--success)"></span></div>
+              <span class="score-item-value">87</span>
+            </div>
+            <div class="score-item">
+              <span class="score-item-label">Structure</span>
+              <div class="score-item-bar"><span style="width:78%;background:var(--warning)"></span></div>
+              <span class="score-item-value">78</span>
+            </div>
+            <div class="score-item">
+              <span class="score-item-label">Technical SEO</span>
+              <div class="score-item-bar"><span style="width:71%;background:var(--warning)"></span></div>
+              <span class="score-item-value">71</span>
+            </div>
+            <div class="score-item">
+              <span class="score-item-label">Meta Tags</span>
+              <div class="score-item-bar"><span style="width:95%;background:var(--success)"></span></div>
+              <span class="score-item-value">95</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Top Keywords</span>
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px">View All</button>
+        </div>
+        <div class="panel-body">
+          <ul class="keyword-list">
+            <li class="keyword-item">
+              <span class="keyword-rank">#1</span>
+              <span class="keyword-text">SEO content optimization</span>
+              <span class="keyword-count">24×</span>
+              <span class="keyword-status good">Optimal</span>
+            </li>
+            <li class="keyword-item">
+              <span class="keyword-rank">#2</span>
+              <span class="keyword-text">keyword density tool</span>
+              <span class="keyword-count">18×</span>
+              <span class="keyword-status good">Optimal</span>
+            </li>
+            <li class="keyword-item">
+              <span class="keyword-rank">#3</span>
+              <span class="keyword-text">content analysis</span>
+              <span class="keyword-count">15×</span>
+              <span class="keyword-status warn">Add 3×</span>
+            </li>
+            <li class="keyword-item">
+              <span class="keyword-rank">#4</span>
+              <span class="keyword-text">SERP ranking factors</span>
+              <span class="keyword-count">8×</span>
+              <span class="keyword-status low">Too low</span>
+            </li>
+            <li class="keyword-item">
+              <span class="keyword-rank">#5</span>
+              <span class="keyword-text">on-page SEO</span>
+              <span class="keyword-count">12×</span>
+              <span class="keyword-status good">Optimal</span>
+            </li>
+            <li class="keyword-item">
+              <span class="keyword-rank">#6</span>
+              <span class="keyword-text">text optimization</span>
+              <span class="keyword-count">6×</span>
+              <span class="keyword-status warn">Add 4×</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Page Performance</span>
+        <div class="header-actions">
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px">7d</button>
+          <button class="btn btn-primary" style="padding:4px 10px;font-size:12px">30d</button>
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px">90d</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Page</th><th>Score</th><th>Keywords</th><th>Position</th><th>Trend</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div style="font-weight:500">Homepage</div>
+              <div class="url-cell">/</div>
+            </td>
+            <td><strong>92</strong></td>
+            <td>48</td>
+            <td>3.2</td>
+            <td><span class="trend up">↑ 4</span></td>
+            <td><span class="tag">Optimized</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="font-weight:500">Content Editor Guide</div>
+              <div class="url-cell">/guides/content-editor</div>
+            </td>
+            <td><strong>87</strong></td>
+            <td>32</td>
+            <td>7.8</td>
+            <td><span class="trend up">↑ 12</span></td>
+            <td><span class="tag">Optimized</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="font-weight:500">Keyword Research</div>
+              <div class="url-cell">/tools/keyword-research</div>
+            </td>
+            <td><strong>74</strong></td>
+            <td>28</td>
+            <td>15.4</td>
+            <td><span class="trend flat">— 0</span></td>
+            <td><span style="background:rgba(234,179,8,.1);color:var(--warning)" class="tag">Needs Work</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="font-weight:500">API Documentation</div>
+              <div class="url-cell">/docs/api</div>
+            </td>
+            <td><strong>68</strong></td>
+            <td>15</td>
+            <td>22.1</td>
+            <td><span class="trend down">↓ 3</span></td>
+            <td><span style="background:rgba(239,68,68,.1);color:var(--danger)" class="tag">Review</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="font-weight:500">Pricing</div>
+              <div class="url-cell">/pricing</div>
+            </td>
+            <td><strong>81</strong></td>
+            <td>12</td>
+            <td>8.9</td>
+            <td><span class="trend up">↑ 6</span></td>
+            <td><span class="tag">Optimized</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+</body>
+</html>
