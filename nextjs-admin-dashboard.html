@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdminHub — Role-Based Dashboard Demo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        brand: { 50:'#f0f9ff', 100:'#e0f2fe', 200:'#bae6fd', 400:'#38bdf8', 500:'#0ea5e9', 600:'#0284c7', 700:'#0369a1', 800:'#075985', 900:'#0c4a6e' }
+      }
+    }
+  }
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  body { font-family: 'Inter', system-ui, sans-serif; }
+  .glass { background: rgba(15,23,42,0.7); backdrop-filter: blur(16px); }
+  .sidebar-item { transition: all 0.15s; }
+  .sidebar-item:hover, .sidebar-item.active { background: rgba(14,165,233,0.12); color: #38bdf8; }
+  .table-row:hover { background: rgba(14,165,233,0.05); }
+  .badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 9999px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .fade-in { animation: fadeIn 0.3s ease-out; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .btn { transition: all 0.15s; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  input:focus, select:focus { outline: none; border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.15); }
+  .export-pulse { animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.7; } }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #0f172a; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+</style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+
+<!-- SIDEBAR -->
+<aside class="w-60 bg-slate-900 border-r border-slate-800 flex flex-col min-h-screen fixed left-0 top-0 z-30">
+  <div class="p-5 border-b border-slate-800 flex items-center gap-3">
+    <div class="w-9 h-9 rounded-lg bg-brand-600 flex items-center justify-center font-bold text-white text-sm">A</div>
+    <div>
+      <div class="font-semibold text-sm">AdminHub</div>
+      <div class="text-xs text-slate-500" id="roleLabel">Admin</div>
+    </div>
+  </div>
+  <nav class="flex-1 p-3 space-y-1">
+    <a onclick="showPage('dashboard')" class="sidebar-item active flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm" id="nav-dashboard">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+      Dashboard
+    </a>
+    <a onclick="showPage('records')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm" id="nav-records">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+      Records
+    </a>
+    <a onclick="showPage('users')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm" id="nav-users">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      Users
+      <span class="badge bg-brand-600/20 text-brand-400 ml-auto" id="usersAdminOnly">Admin</span>
+    </a>
+    <a onclick="showPage('settings')" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm" id="nav-settings">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Settings
+    </a>
+  </nav>
+  <div class="p-4 border-t border-slate-800">
+    <div class="text-xs text-slate-500 mb-2">Switch Role (Demo)</div>
+    <select id="roleSwitch" onchange="switchRole(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+      <option value="admin">👑 Admin</option>
+      <option value="manager">📋 Manager</option>
+      <option value="viewer">👁️ Viewer</option>
+    </select>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="ml-60 flex-1 min-h-screen">
+
+  <!-- TOP BAR -->
+  <header class="sticky top-0 z-20 bg-slate-950/80 backdrop-blur-md border-b border-slate-800 px-6 py-3 flex items-center justify-between">
+    <div>
+      <h1 class="text-lg font-semibold" id="pageTitle">Dashboard</h1>
+      <p class="text-xs text-slate-500">Role-Based Admin Panel — Interactive Demo</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <svg class="w-5 h-5 text-slate-400 cursor-pointer hover:text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+      </div>
+      <div class="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-xs font-bold" id="userAvatar">NA</div>
+    </div>
+  </header>
+
+  <!-- PAGES -->
+  <main class="p-6">
+
+    <!-- DASHBOARD PAGE -->
+    <div id="page-dashboard" class="fade-in">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="glass rounded-xl p-5 border border-slate-800">
+          <div class="text-xs text-slate-400 mb-1 uppercase tracking-wider">Total Records</div>
+          <div class="text-2xl font-bold">2,847</div>
+          <div class="text-xs text-emerald-400 mt-1">↑ 12.5% vs last month</div>
+        </div>
+        <div class="glass rounded-xl p-5 border border-slate-800">
+          <div class="text-xs text-slate-400 mb-1 uppercase tracking-wider">Active Users</div>
+          <div class="text-2xl font-bold">142</div>
+          <div class="text-xs text-emerald-400 mt-1">↑ 8 new this week</div>
+        </div>
+        <div class="glass rounded-xl p-5 border border-slate-800">
+          <div class="text-xs text-slate-400 mb-1 uppercase tracking-wider">Pending Reviews</div>
+          <div class="text-2xl font-bold text-amber-400">23</div>
+          <div class="text-xs text-amber-400 mt-1">⚠ 5 overdue</div>
+        </div>
+        <div class="glass rounded-xl p-5 border border-slate-800">
+          <div class="text-xs text-slate-400 mb-1 uppercase tracking-wider">Completion Rate</div>
+          <div class="text-2xl font-bold text-emerald-400">94.2%</div>
+          <div class="text-xs text-slate-400 mt-1">Target: 95%</div>
+        </div>
+      </div>
+
+      <!-- CHART PLACEHOLDER -->
+      <div class="glass rounded-xl border border-slate-800 p-5 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-sm">Records Over Time</h3>
+          <div class="flex gap-2">
+            <button class="text-xs px-3 py-1 rounded-full bg-brand-600/20 text-brand-400">7 days</button>
+            <button class="text-xs px-3 py-1 rounded-full text-slate-400 hover:bg-slate-800">30 days</button>
+            <button class="text-xs px-3 py-1 rounded-full text-slate-400 hover:bg-slate-800">90 days</button>
+          </div>
+        </div>
+        <div class="h-48 flex items-end gap-1" id="chart"></div>
+      </div>
+
+      <!-- RECENT ACTIVITY -->
+      <div class="glass rounded-xl border border-slate-800 p-5">
+        <h3 class="font-semibold text-sm mb-4">Recent Activity</h3>
+        <div class="space-y-3" id="activityList"></div>
+      </div>
+    </div>
+
+    <!-- RECORDS PAGE -->
+    <div id="page-records" class="fade-in hidden">
+      <!-- FILTERS -->
+      <div class="glass rounded-xl border border-slate-800 p-4 mb-4 flex flex-wrap gap-3 items-center">
+        <div class="flex-1 min-w-[200px]">
+          <input type="text" id="searchInput" oninput="filterRecords()" placeholder="Search records..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <select id="statusFilter" onchange="filterRecords()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="pending">Pending</option>
+          <option value="archived">Archived</option>
+        </select>
+        <select id="categoryFilter" onchange="filterRecords()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+          <option value="">All Categories</option>
+          <option value="finance">Finance</option>
+          <option value="operations">Operations</option>
+          <option value="marketing">Marketing</option>
+          <option value="engineering">Engineering</option>
+        </select>
+        <button onclick="exportCSV()" class="btn bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2" id="exportBtn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Export CSV
+        </button>
+        <button onclick="openModal('add')" class="btn bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2" id="addRecordBtn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Add Record
+        </button>
+      </div>
+
+      <!-- TABLE -->
+      <div class="glass rounded-xl border border-slate-800 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 text-xs uppercase tracking-wider">
+                <th class="text-left p-3 cursor-pointer hover:text-slate-200" onclick="sortRecords('id')">ID ↕</th>
+                <th class="text-left p-3 cursor-pointer hover:text-slate-200" onclick="sortRecords('title')">Title ↕</th>
+                <th class="text-left p-3 cursor-pointer hover:text-slate-200" onclick="sortRecords('category')">Category ↕</th>
+                <th class="text-left p-3 cursor-pointer hover:text-slate-200" onclick="sortRecords('status')">Status ↕</th>
+                <th class="text-left p-3 cursor-pointer hover:text-slate-200" onclick="sortRecords('assignee')">Assignee ↕</th>
+                <th class="text-left p-3 cursor-pointer hover:text-slate-200" onclick="sortRecords('date')">Updated ↕</th>
+                <th class="text-left p-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="recordsTable"></tbody>
+          </table>
+        </div>
+        <div class="border-t border-slate-800 p-3 flex items-center justify-between text-xs text-slate-400">
+          <span id="recordCount">Showing 0 records</span>
+          <div class="flex gap-2">
+            <button onclick="changePage(-1)" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700">← Prev</button>
+            <span id="pageInfo" class="px-3 py-1">Page 1</span>
+            <button onclick="changePage(1)" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700">Next →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS PAGE (Admin only) -->
+    <div id="page-users" class="fade-in hidden">
+      <div class="glass rounded-xl border border-slate-800 p-5 mb-4" id="usersContent">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold">User Management</h3>
+          <button class="btn bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium" id="inviteUserBtn">+ Invite User</button>
+        </div>
+        <div class="space-y-3" id="usersList"></div>
+      </div>
+      <div id="usersBlocked" class="hidden glass rounded-xl border border-red-900/30 p-8 text-center">
+        <svg class="w-12 h-12 text-red-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        <h3 class="text-lg font-semibold text-red-400 mb-1">Access Restricted</h3>
+        <p class="text-sm text-slate-400">User management requires Admin privileges.</p>
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div id="page-settings" class="fade-in hidden">
+      <div class="glass rounded-xl border border-slate-800 p-5 max-w-2xl">
+        <h3 class="font-semibold mb-4">Settings</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Display Name</label>
+            <input type="text" value="Nedim A." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Email</label>
+            <input type="email" value="nedim@example.com" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Timezone</label>
+            <select class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+              <option>America/Toronto (EST)</option>
+              <option>America/Vancouver (PST)</option>
+              <option>Europe/London (GMT)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Notifications</label>
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-2 text-sm"><input type="checkbox" checked class="accent-brand-500"> Email</label>
+              <label class="flex items-center gap-2 text-sm"><input type="checkbox" checked class="accent-brand-500"> In-App</label>
+              <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="accent-brand-500"> Slack</label>
+            </div>
+          </div>
+          <button class="btn bg-brand-600 hover:bg-brand-700 text-white px-6 py-2 rounded-lg text-sm font-medium">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal()"></div>
+  <div class="relative bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-lg shadow-2xl fade-in">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold" id="modalTitle">Add Record</h3>
+      <button onclick="closeModal()" class="text-slate-400 hover:text-white">✕</button>
+    </div>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">Title</label>
+        <input type="text" id="modalRecTitle" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm" placeholder="Record title...">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">Category</label>
+          <select id="modalRecCat" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+            <option value="finance">Finance</option>
+            <option value="operations">Operations</option>
+            <option value="marketing">Marketing</option>
+            <option value="engineering">Engineering</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">Status</label>
+          <select id="modalRecStatus" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+            <option value="active">Active</option>
+            <option value="pending">Pending</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">Assignee</label>
+        <select id="modalRecAssignee" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+          <option>Sarah Chen</option>
+          <option>Marcus Webb</option>
+          <option>Elena Torres</option>
+          <option>David Kim</option>
+          <option>Priya Sharma</option>
+        </select>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button onclick="saveRecord()" class="btn flex-1 bg-brand-600 hover:bg-brand-700 text-white py-2 rounded-lg text-sm font-medium">Save</button>
+        <button onclick="closeModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-lg text-sm">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="hidden fixed bottom-6 right-6 z-50 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 fade-in">
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+  <span id="toastMsg"></span>
+</div>
+
+<!-- FOOTER -->
+<div class="fixed bottom-0 left-60 right-0 bg-slate-950/90 backdrop-blur border-t border-slate-800 px-6 py-2 text-center text-xs text-slate-500">
+  Demo by <strong class="text-brand-400">United DigiArt Vision</strong> — Role-Based Admin Dashboard with CRUD, Filtering, Search & CSV Export
+</div>
+
+<script>
+// DATA
+const records = [
+  { id: 'REC-001', title: 'Q1 Financial Report', category: 'finance', status: 'active', assignee: 'Sarah Chen', date: '2026-02-17' },
+  { id: 'REC-002', title: 'Server Migration Plan', category: 'engineering', status: 'pending', assignee: 'Marcus Webb', date: '2026-02-16' },
+  { id: 'REC-003', title: 'Brand Guidelines v3', category: 'marketing', status: 'active', assignee: 'Elena Torres', date: '2026-02-16' },
+  { id: 'REC-004', title: 'Vendor Contract Review', category: 'operations', status: 'pending', assignee: 'David Kim', date: '2026-02-15' },
+  { id: 'REC-005', title: 'Employee Onboarding SOP', category: 'operations', status: 'active', assignee: 'Priya Sharma', date: '2026-02-15' },
+  { id: 'REC-006', title: 'Ad Campaign Analysis', category: 'marketing', status: 'archived', assignee: 'Elena Torres', date: '2026-02-14' },
+  { id: 'REC-007', title: 'API Rate Limiting Spec', category: 'engineering', status: 'active', assignee: 'Marcus Webb', date: '2026-02-14' },
+  { id: 'REC-008', title: 'Budget Forecast 2026', category: 'finance', status: 'pending', assignee: 'Sarah Chen', date: '2026-02-13' },
+  { id: 'REC-009', title: 'Customer Survey Results', category: 'marketing', status: 'active', assignee: 'Priya Sharma', date: '2026-02-13' },
+  { id: 'REC-010', title: 'Infrastructure Audit', category: 'engineering', status: 'active', assignee: 'David Kim', date: '2026-02-12' },
+  { id: 'REC-011', title: 'Quarterly Tax Filing', category: 'finance', status: 'archived', assignee: 'Sarah Chen', date: '2026-02-12' },
+  { id: 'REC-012', title: 'Warehouse Logistics Opt.', category: 'operations', status: 'active', assignee: 'David Kim', date: '2026-02-11' },
+  { id: 'REC-013', title: 'Social Media Calendar', category: 'marketing', status: 'active', assignee: 'Elena Torres', date: '2026-02-11' },
+  { id: 'REC-014', title: 'CI/CD Pipeline Upgrade', category: 'engineering', status: 'pending', assignee: 'Marcus Webb', date: '2026-02-10' },
+  { id: 'REC-015', title: 'Expense Policy Update', category: 'finance', status: 'active', assignee: 'Priya Sharma', date: '2026-02-10' },
+  { id: 'REC-016', title: 'Product Roadmap H2', category: 'engineering', status: 'active', assignee: 'Marcus Webb', date: '2026-02-09' },
+  { id: 'REC-017', title: 'Office Lease Renewal', category: 'operations', status: 'pending', assignee: 'David Kim', date: '2026-02-09' },
+  { id: 'REC-018', title: 'Influencer Partnership', category: 'marketing', status: 'active', assignee: 'Elena Torres', date: '2026-02-08' },
+  { id: 'REC-019', title: 'Revenue Reconciliation', category: 'finance', status: 'active', assignee: 'Sarah Chen', date: '2026-02-08' },
+  { id: 'REC-020', title: 'Security Patch Rollout', category: 'engineering', status: 'active', assignee: 'Marcus Webb', date: '2026-02-07' },
+];
+
+const users = [
+  { name: 'Sarah Chen', email: 'sarah@company.com', role: 'admin', status: 'active', lastLogin: '2 min ago' },
+  { name: 'Marcus Webb', email: 'marcus@company.com', role: 'manager', status: 'active', lastLogin: '1 hr ago' },
+  { name: 'Elena Torres', email: 'elena@company.com', role: 'manager', status: 'active', lastLogin: '3 hrs ago' },
+  { name: 'David Kim', email: 'david@company.com', role: 'viewer', status: 'active', lastLogin: '5 hrs ago' },
+  { name: 'Priya Sharma', email: 'priya@company.com', role: 'viewer', status: 'active', lastLogin: 'yesterday' },
+  { name: 'Tom Chen', email: 'tom@company.com', role: 'viewer', status: 'invited', lastLogin: 'never' },
+];
+
+const activities = [
+  { user: 'Sarah Chen', action: 'updated', target: 'Q1 Financial Report', time: '2 min ago', color: 'brand-400' },
+  { user: 'Marcus Webb', action: 'created', target: 'Server Migration Plan', time: '1 hr ago', color: 'emerald-400' },
+  { user: 'Elena Torres', action: 'archived', target: 'Ad Campaign Analysis', time: '3 hrs ago', color: 'amber-400' },
+  { user: 'David Kim', action: 'commented on', target: 'Vendor Contract Review', time: '5 hrs ago', color: 'purple-400' },
+  { user: 'Priya Sharma', action: 'exported', target: '15 records as CSV', time: 'yesterday', color: 'slate-400' },
+];
+
+let currentRole = 'admin';
+let currentPage = 1;
+const perPage = 10;
+let sortField = 'date';
+let sortDir = -1;
+let editingId = null;
+
+// RENDER
+function showPage(page) {
+  document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  document.getElementById('page-' + page).classList.remove('hidden');
+  document.getElementById('nav-' + page).classList.add('active');
+  const titles = { dashboard: 'Dashboard', records: 'Records', users: 'User Management', settings: 'Settings' };
+  document.getElementById('pageTitle').textContent = titles[page];
+}
+
+function switchRole(role) {
+  currentRole = role;
+  document.getElementById('roleLabel').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+  
+  // RBAC visibility
+  const isAdmin = role === 'admin';
+  const isViewer = role === 'viewer';
+  
+  document.getElementById('usersAdminOnly').style.display = isAdmin ? '' : 'none';
+  document.getElementById('usersContent').classList.toggle('hidden', !isAdmin);
+  document.getElementById('usersBlocked').classList.toggle('hidden', isAdmin);
+  document.getElementById('addRecordBtn').classList.toggle('hidden', isViewer);
+  document.getElementById('exportBtn').classList.toggle('hidden', isViewer);
+  document.getElementById('inviteUserBtn')?.classList.toggle('hidden', !isAdmin);
+  
+  renderRecords();
+  showToast(`Switched to ${role} role`);
+}
+
+function renderRecords() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  const cat = document.getElementById('categoryFilter').value;
+  
+  let filtered = records.filter(r => {
+    if (search && !r.title.toLowerCase().includes(search) && !r.id.toLowerCase().includes(search)) return false;
+    if (status && r.status !== status) return false;
+    if (cat && r.category !== cat) return false;
+    return true;
+  });
+  
+  filtered.sort((a, b) => {
+    const av = a[sortField], bv = b[sortField];
+    return av < bv ? -sortDir : av > bv ? sortDir : 0;
+  });
+  
+  const total = filtered.length;
+  const pages = Math.ceil(total / perPage);
+  if (currentPage > pages) currentPage = pages || 1;
+  const start = (currentPage - 1) * perPage;
+  const pageItems = filtered.slice(start, start + perPage);
+  
+  const statusColors = { active: 'bg-emerald-500/15 text-emerald-400', pending: 'bg-amber-500/15 text-amber-400', archived: 'bg-slate-500/15 text-slate-400' };
+  const catColors = { finance: 'bg-blue-500/15 text-blue-400', operations: 'bg-purple-500/15 text-purple-400', marketing: 'bg-pink-500/15 text-pink-400', engineering: 'bg-cyan-500/15 text-cyan-400' };
+  
+  const isViewer = currentRole === 'viewer';
+  
+  document.getElementById('recordsTable').innerHTML = pageItems.map(r => `
+    <tr class="table-row border-b border-slate-800/50">
+      <td class="p-3 text-slate-500 font-mono text-xs">${r.id}</td>
+      <td class="p-3 font-medium">${r.title}</td>
+      <td class="p-3"><span class="badge ${catColors[r.category]}">${r.category}</span></td>
+      <td class="p-3"><span class="badge ${statusColors[r.status]}">${r.status}</span></td>
+      <td class="p-3 text-slate-300">${r.assignee}</td>
+      <td class="p-3 text-slate-400">${r.date}</td>
+      <td class="p-3">
+        ${isViewer ? '<span class="text-xs text-slate-600">View only</span>' : `
+        <button onclick="openModal('edit','${r.id}')" class="text-brand-400 hover:text-brand-300 text-xs mr-2">Edit</button>
+        <button onclick="deleteRecord('${r.id}')" class="text-red-400 hover:text-red-300 text-xs">Delete</button>
+        `}
+      </td>
+    </tr>
+  `).join('');
+  
+  document.getElementById('recordCount').textContent = `Showing ${start+1}–${Math.min(start+perPage,total)} of ${total} records`;
+  document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${pages || 1}`;
+}
+
+function filterRecords() { currentPage = 1; renderRecords(); }
+function sortRecords(field) { if (sortField === field) sortDir *= -1; else { sortField = field; sortDir = 1; } renderRecords(); }
+function changePage(d) { currentPage += d; if (currentPage < 1) currentPage = 1; renderRecords(); }
+
+function exportCSV() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  const cat = document.getElementById('categoryFilter').value;
+  let filtered = records.filter(r => {
+    if (search && !r.title.toLowerCase().includes(search) && !r.id.toLowerCase().includes(search)) return false;
+    if (status && r.status !== status) return false;
+    if (cat && r.category !== cat) return false;
+    return true;
+  });
+  let csv = 'ID,Title,Category,Status,Assignee,Updated\n';
+  filtered.forEach(r => csv += `${r.id},${r.title},${r.category},${r.status},${r.assignee},${r.date}\n`);
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'records_export.csv';
+  a.click();
+  showToast(`Exported ${filtered.length} records as CSV`);
+}
+
+function openModal(mode, id) {
+  editingId = mode === 'edit' ? id : null;
+  document.getElementById('modalTitle').textContent = mode === 'edit' ? 'Edit Record' : 'Add Record';
+  if (mode === 'edit') {
+    const r = records.find(x => x.id === id);
+    if (r) {
+      document.getElementById('modalRecTitle').value = r.title;
+      document.getElementById('modalRecCat').value = r.category;
+      document.getElementById('modalRecStatus').value = r.status;
+      document.getElementById('modalRecAssignee').value = r.assignee;
+    }
+  } else {
+    document.getElementById('modalRecTitle').value = '';
+    document.getElementById('modalRecCat').value = 'finance';
+    document.getElementById('modalRecStatus').value = 'active';
+  }
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+function saveRecord() {
+  const title = document.getElementById('modalRecTitle').value.trim();
+  if (!title) return;
+  if (editingId) {
+    const r = records.find(x => x.id === editingId);
+    if (r) {
+      r.title = title;
+      r.category = document.getElementById('modalRecCat').value;
+      r.status = document.getElementById('modalRecStatus').value;
+      r.assignee = document.getElementById('modalRecAssignee').value;
+      r.date = new Date().toISOString().split('T')[0];
+    }
+    showToast('Record updated');
+  } else {
+    const newId = 'REC-' + String(records.length + 1).padStart(3, '0');
+    records.unshift({
+      id: newId, title,
+      category: document.getElementById('modalRecCat').value,
+      status: document.getElementById('modalRecStatus').value,
+      assignee: document.getElementById('modalRecAssignee').value,
+      date: new Date().toISOString().split('T')[0]
+    });
+    showToast('Record created');
+  }
+  closeModal();
+  renderRecords();
+}
+
+function deleteRecord(id) {
+  if (!confirm('Delete this record?')) return;
+  const idx = records.findIndex(r => r.id === id);
+  if (idx >= 0) records.splice(idx, 1);
+  showToast('Record deleted');
+  renderRecords();
+}
+
+function renderUsers() {
+  const roleColors = { admin: 'bg-red-500/15 text-red-400', manager: 'bg-brand-500/15 text-brand-400', viewer: 'bg-slate-500/15 text-slate-400' };
+  document.getElementById('usersList').innerHTML = users.map(u => `
+    <div class="flex items-center justify-between p-3 rounded-lg hover:bg-slate-800/50">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold">${u.name.split(' ').map(n=>n[0]).join('')}</div>
+        <div>
+          <div class="font-medium text-sm">${u.name}</div>
+          <div class="text-xs text-slate-500">${u.email}</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="badge ${roleColors[u.role]}">${u.role}</span>
+        <span class="text-xs text-slate-500">${u.lastLogin}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderChart() {
+  const data = [35,42,28,55,48,62,45,38,70,52,65,58,72,49,80];
+  const max = Math.max(...data);
+  document.getElementById('chart').innerHTML = data.map((v,i) => `
+    <div class="flex-1 flex flex-col items-center justify-end gap-1">
+      <div class="text-[10px] text-slate-500">${v}</div>
+      <div class="w-full rounded-t bg-brand-600/60 hover:bg-brand-500 transition-all" style="height:${(v/max)*100}%"></div>
+    </div>
+  `).join('');
+}
+
+function renderActivity() {
+  document.getElementById('activityList').innerHTML = activities.map(a => `
+    <div class="flex items-center gap-3 text-sm">
+      <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold">${a.user.split(' ').map(n=>n[0]).join('')}</div>
+      <div class="flex-1"><strong class="text-slate-200">${a.user}</strong> <span class="text-slate-400">${a.action}</span> <span class="text-${a.color}">${a.target}</span></div>
+      <span class="text-xs text-slate-500">${a.time}</span>
+    </div>
+  `).join('');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.remove('hidden');
+  setTimeout(() => t.classList.add('hidden'), 2500);
+}
+
+// INIT
+renderRecords();
+renderUsers();
+renderChart();
+renderActivity();
+switchRole('admin');
+</script>
+</body>
+</html>
